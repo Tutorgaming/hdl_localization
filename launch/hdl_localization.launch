@@ -2,27 +2,31 @@
 <launch>
   <!-- arguments -->
   <arg name="nodelet_manager" default="velodyne_nodelet_manager" />
-
+  <arg name="points_topic" default="/lslidar_point_cloud" />
+  <param name="use_sim_time" value="True"/>
   <!-- in case you use velodyne_driver, comment out the following line -->
   <node pkg="nodelet" type="nodelet" name="$(arg nodelet_manager)" args="manager" output="screen"/>
 
     <!-- globalmap_server_nodelet -->
     <node pkg="nodelet" type="nodelet" name="globalmap_server_nodelet" args="load hdl_localization/GlobalmapServerNodelet $(arg nodelet_manager)">
-      <param name="globalmap_pcd" value="$(find hdl_localization)/data/map.pcd" />
+      <param name="globalmap_pcd" value="$(find hdl_localization)/data/cu_eng_5cm.pcd" />
       <param name="downsample_resolution" value="0.1" />
     </node>
 
     <!-- hdl_localization_nodelet -->
     <node pkg="nodelet" type="nodelet" name="hdl_localization_nodelet" args="load hdl_localization/HdlLocalizationNodelet $(arg nodelet_manager)">
+        <!-- Input Lidar -->
+        <remap from="/velodyne_points" to="$(arg points_topic)" />
+        <param name="odom_frame_id" value="lidar"/>
         <!-- imu settings -->
         <!-- during "cool_time", imu inputs are ignored -->
-        <param name="use_imu" value="true" />
-        <param name="invert_imu" value="true" />
+        <param name="use_imu" value="false" />
+        <param name="invert_imu" value="false" />
         <param name="cool_time_duration" value="2.0" />
         <!-- ndt settings -->
         <!-- if NDT is slow for your PC, try DIRECT1 serach method, which is a bit unstable but extremely fast -->
-        <param name="ndt_neighbor_search_method" value="DIRECT7" />
-        <param name="ndt_resolution" value="1.0" />
+        <param name="ndt_neighbor_search_method" value="DIRECT1" />
+        <param name="ndt_resolution" value="2.0" />
         <param name="downsample_resolution" value="0.1" />
         <!-- if "specify_init_pose" is true, pose estimator will be initialized with the following params -->
         <!-- otherwise, you need to input an initial pose with "2D Pose Estimate" on rviz" -->

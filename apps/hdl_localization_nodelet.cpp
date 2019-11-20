@@ -45,6 +45,7 @@ public:
 
     use_imu = private_nh.param<bool>("use_imu", true);
     invert_imu = private_nh.param<bool>("invert_imu", false);
+    odom_frame_id = private_nh.param<std::string>("odom_frame_id", "velodyne");
     if(use_imu) {
       NODELET_INFO("enable imu-based prediction");
       imu_sub = mt_nh.subscribe("/gpsimu_driver/imu_data", 256, &HdlLocalizationNodelet::imu_callback, this);
@@ -230,7 +231,7 @@ private:
    */
   void publish_odometry(const ros::Time& stamp, const Eigen::Matrix4f& pose) {
     // broadcast the transform over tf
-    geometry_msgs::TransformStamped odom_trans = matrix2transform(stamp, pose, "map", "velodyne");
+    geometry_msgs::TransformStamped odom_trans = matrix2transform(stamp, pose, "map", odom_frame_id.c_str());
     pose_broadcaster.sendTransform(odom_trans);
 
     // publish the transform
@@ -243,7 +244,7 @@ private:
     odom.pose.pose.position.z = pose(2, 3);
     odom.pose.pose.orientation = odom_trans.transform.rotation;
 
-    odom.child_frame_id = "velodyne";
+    odom.child_frame_id = odom_frame_id;
     odom.twist.twist.linear.x = 0.0;
     odom.twist.twist.linear.y = 0.0;
     odom.twist.twist.angular.z = 0.0;
@@ -289,6 +290,7 @@ private:
 
   bool use_imu;
   bool invert_imu;
+  std::string odom_frame_id;
   ros::Subscriber imu_sub;
   ros::Subscriber points_sub;
   ros::Subscriber globalmap_sub;
